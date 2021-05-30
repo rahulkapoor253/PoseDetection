@@ -2,6 +2,7 @@ import cv2
 import mediapipe as mp
 import time
 import math
+import numpy as np
 
 
 class PoseDetector:
@@ -51,7 +52,7 @@ class PoseDetector:
 
         angle = math.degrees(math.atan2(y3 - y2, x3 - x2) - math.atan2(y1 - y2, x1 - x2))
         if angle <= 0:
-            angle += 360
+            angle = np.absolute(angle)
 
         if draw:
             # draw lines between chosen landmarks
@@ -66,6 +67,8 @@ class PoseDetector:
             cv2.circle(image, (x3, y3), 15, (255, 0, 0), 2)
             # put angle
             cv2.putText(image, str(int(angle)), (x2 - 15, y2 - 15), cv2.FONT_HERSHEY_PLAIN, 2, (200, 200, 0), 2)
+
+        return angle
 
 
 def main():
