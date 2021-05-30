@@ -1,6 +1,7 @@
 import cv2
 import mediapipe as mp
 import time
+import math
 
 
 class PoseDetector:
@@ -31,17 +32,40 @@ class PoseDetector:
         return image
 
     def find_landmarks(self, image):
-        landmarks_list = []
+        self.landmarks_list = []
 
         if self.results.pose_landmarks:
             for id, landmark in enumerate(self.results.pose_landmarks.landmark):
                 # convert coordinates into pixel values
                 ih, iw, _ = image.shape
                 cx, cy = int(landmark.x * iw), int(landmark.y * ih)
-                landmarks_list.append([id, cx, cy])
-                cv2.circle(image, (cx, cy), 5, cv2.COLOR_GRAY2BGR, cv2.FILLED)
+                self.landmarks_list.append([id, cx, cy])
 
-        return landmarks_list
+        return self.landmarks_list
+
+    def find_angle(self, image, p1, p2, p3, draw=True):
+        # [landmark_index, x, y]
+        x1, y1 = self.landmarks_list[p1][1:]
+        x2, y2 = self.landmarks_list[p2][1:]
+        x3, y3 = self.landmarks_list[p3][1:]
+
+        angle = math.degrees(math.atan2(y3 - y2, x3 - x2) - math.atan2(y1 - y2, x1 - x2))
+        if angle <= 0:
+            angle += 360
+
+        if draw:
+            # draw lines between chosen landmarks
+            cv2.line(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.line(image, (x2, y2), (x3, y3), (0, 255, 0), 2)
+            # highlight the chosen landmarks
+            cv2.circle(image, (x1, y1), 8, (255, 0, 0), cv2.FILLED)
+            cv2.circle(image, (x1, y1), 15, (255, 0, 0), 2)
+            cv2.circle(image, (x2, y2), 8, (255, 0, 0), cv2.FILLED)
+            cv2.circle(image, (x2, y2), 15, (255, 0, 0), 2)
+            cv2.circle(image, (x3, y3), 8, (255, 0, 0), cv2.FILLED)
+            cv2.circle(image, (x3, y3), 15, (255, 0, 0), 2)
+            # put angle
+            cv2.putText(image, str(int(angle)), (x2 - 15, y2 - 15), cv2.FONT_HERSHEY_PLAIN, 2, (200, 200, 0), 2)
 
 
 def main():
